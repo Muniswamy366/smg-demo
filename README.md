@@ -91,3 +91,68 @@ OUTPUT:
 
 ![img_5.png](img_5.png)
 ![img_6.png](img_6.png)
+
+
+
+
+## Architecture
+
+```mermaid
+graph TB
+    subgraph PresentationLayer["Presentation Layer"]
+        Controller["TrafficLightController\n@RestController"]
+    end
+    
+    subgraph ApplicationLayer["Application Layer"]
+        Service["TrafficLightService\n@Service"]
+        Coordinator["IntersectionCoordinator\n@Component"]
+    end
+    
+    subgraph DomainLayer["Domain Layer"]
+        Aggregate["IntersectionState\nAggregate Root"]
+        Entity["TrafficLight\nEntity"]
+        VO1["StateChangeEvent\nValue Object"]
+        VO2["Direction/LightColor\nEnums"]
+    end
+    
+    subgraph ValidationLayer["Validation Layer"]
+        ValInterface["LightTransitionValidation\nInterface"]
+        Val1["PausedStateValidation\n@Order 1"]
+        Val2["GreenLightValidation\n@Order 2"]
+    end
+    
+    subgraph InfrastructureLayer["Infrastructure Layer"]
+        RepoInterface["IntersectionRepository\nInterface"]
+        RepoImpl["InMemoryIntersectionRepository\n@Repository"]
+    end
+    
+    subgraph ExceptionLayer["Exception Layer"]
+        ExHandler["GlobalExceptionHandler\n@RestControllerAdvice"]
+        Ex1["IntersectionNotFoundException"]
+        Ex2["LightConflictException"]
+        Ex3["IntersectionPausedException"]
+    end
+    
+    Controller --> Service
+    Controller --> ExHandler
+    Service --> Coordinator
+    Service --> RepoInterface
+    Service --> ValInterface
+    ValInterface --> Val1
+    ValInterface --> Val2
+    Val1 -.-> Ex3
+    Val2 -.-> Ex2
+    RepoInterface --> RepoImpl
+    RepoImpl --> Aggregate
+    Aggregate --> Entity
+    Aggregate --> VO1
+    Entity --> VO2
+    Service -.-> Ex1
+    
+    style Controller fill:#e1f5ff
+    style Service fill:#fff4e1
+    style Aggregate fill:#e8f5e9
+    style ValInterface fill:#f3e5f5
+    style RepoInterface fill:#fce4ec
+    style ExHandler fill:#ffebee
+```
